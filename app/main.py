@@ -191,7 +191,6 @@ def main(args):
         running_state.pop(service)
     logger.info(f"The following services will not be configured due to conflicting dnat ports: {conflicted_services}")
 
-    print(args.dry_run)
     if not args.dry_run:
         delete_rules(persisted_state, services_to_cleanup, edgeos_client)
         configured_services = create_rules(running_state, edgeos_client)
