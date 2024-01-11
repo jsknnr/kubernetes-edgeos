@@ -32,9 +32,10 @@ class S3:
         except ClientError as error:
             error_code = error.response["Error"]["Code"]
             # Assume we have a new key
-            if error_code == "NoSuchKey":
+            # If the key isn't there we get AccessDenied instead of NoSuchKey for some reason
+            if error_code == "NoSuchKey" or error_code == "AccessDenied":
                 logger.warn("Existing json state not found in S3, assuming first run and returning new state")
                 content = {}
-                return json.loads(content)
+                return content
             else:
                 raise error
