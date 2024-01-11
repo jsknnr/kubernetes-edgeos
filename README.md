@@ -74,3 +74,4 @@ The token will get passed into the app along with the k8s API endpoint address a
 * Handle partial implementation of services, similar to the above
 * Better checking and reporting of rule conflicts (currently if there is any conflict at all for a given service I just abort implementing the service and report as such in log)
 * Build and publish quick container image for running this app as a container (probably the next thing I do)
+* Cleanup logging (specifically for existing DNAT rules being listed more times than they should)
