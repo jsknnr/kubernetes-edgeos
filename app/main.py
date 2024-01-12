@@ -130,40 +130,50 @@ def create_rules(running_state, edgeos_client):
     configured_services = copy.deepcopy(running_state)
     for service, config in running_state.items():
         for dnat_rule, dnat_config in config['dnat_rules'].items():
-            edgeos_config = edgeos_client.get_config()
-            next_rule = _find_next_rule(edgeos_config, 'dnat')
-            configured_services[service]['dnat_rules'][next_rule] = configured_services[service]['dnat_rules'].pop(dnat_rule)
-            edgeos_client.create_dnat_rule(
-                next_rule,
-                f"Automated rule for {service} service in kubernetes",
-                dnat_config['inbound_interface'],
-                dnat_config['protocol'],
-                config['dest_ip'],
-                dnat_config['port'],
-                config['lb_ip'],
-                dnat_config['port']
-            )
+            if 'pending' in dnat_rule:
+                edgeos_config = edgeos_client.get_config()
+                next_rule = _find_next_rule(edgeos_config, 'dnat')
+                configured_services[service]['dnat_rules'][next_rule] = configured_services[service]['dnat_rules'].pop(dnat_rule)
+                edgeos_client.create_dnat_rule(
+                    next_rule,
+                    f"Automated rule for {service} service in kubernetes",
+                    dnat_config['inbound_interface'],
+                    dnat_config['protocol'],
+                    config['dest_ip'],
+                    dnat_config['port'],
+                    config['lb_ip'],
+                    dnat_config['port']
+                )
         for fw_rule, fw_config in config['fw_rules'].items():
-            edgeos_config = edgeos_client.get_config()
-            next_rule = _find_next_rule(edgeos_config, 'firewall', firewall_name=fw_config['fw_name'])
-            configured_services[service]['fw_rules'][next_rule] = configured_services[service]['fw_rules'].pop(fw_rule)
-            edgeos_client.create_fw_rule(
-                fw_config['fw_name'],
-                next_rule,
-                f"Automated rule for {service} service in kubernetes",
-                config['lb_ip'],
-                fw_config['ports'],
-                fw_config['protocol']
-            )
+            if 'pending' in fw_rule:
+                edgeos_config = edgeos_client.get_config()
+                next_rule = _find_next_rule(edgeos_config, 'firewall', firewall_name=fw_config['fw_name'])
+                configured_services[service]['fw_rules'][next_rule] = configured_services[service]['fw_rules'].pop(fw_rule)
+                edgeos_client.create_fw_rule(
+                    fw_config['fw_name'],
+                    next_rule,
+                    f"Automated rule for {service} service in kubernetes",
+                    config['lb_ip'],
+                    fw_config['ports'],
+                    fw_config['protocol']
+                )
     return configured_services
 
 def delete_rules(persisted_state, services_to_remove, edgeos_client):
+    state = persisted_state
     for service, config in persisted_state.items():
         if service in services_to_remove:
             for dnat_rule, dnat_config in config['dnat_rules'].items():
                 edgeos_client.delete_dnat_rule(dnat_rule)
             for fw_rule, fw_config in config['fw_rules'].items():
                 edgeos_client.delete_fw_rule(fw_config['fw_name'], fw_rule)
+    for service in services_to_remove:
+        state.pop(service)
+    return state
+
+def reconcile_state(running_state, persisted_state):
+    reconciled_state = running_state | persisted_state
+    return reconciled_state
 
 def main(args):
     s3_client = s3.S3(args.s3_access_key, args.s3_secret_access_key, args.s3_bucket)
@@ -192,11 +202,11 @@ def main(args):
     logger.info(f"The following services will not be configured due to conflicting dnat ports: {conflicted_services}")
 
     if not args.dry_run:
-        delete_rules(persisted_state, services_to_cleanup, edgeos_client)
-        configured_services = create_rules(running_state, edgeos_client)
+        p_state = delete_rules(persisted_state, services_to_cleanup, edgeos_client)
+        r_state = create_rules(running_state, edgeos_client)
+        final_state = reconcile_state(r_state, p_state)
         logger.info("Created services:")
-        logger.info(configured_services)
-        s3_client.put_object('edgeos_state.json', configured_services)
+        s3_client.put_object('edgeos_state.json', final_state)
     else:
         logger.info("Dry Run state:")
         logger.info(running_state)
