@@ -55,7 +55,7 @@ def create_running_state(k8s_client, edgeos_config, dest_ip, fw_names=[], inboun
     for service in services["items"]:
         for value in _locate_lb_services(service):
             if value:
-                name = service['metadata']['name']
+                name = f"{service['metadata']['namespace']}/{service['metadata']['name']}"
                 running_state[f"{name}"] = {}
                 running_state[f"{name}"]['lb_ip'] = service['status']['load_balancer']['ingress'][0]['ip']
                 running_state[f"{name}"]['dest_ip'] = dest_ip
@@ -95,7 +95,7 @@ def retrieve_state(path):
         with open(f"{path}/edgeos_state.json", 'r') as state_file:
             state = json.load(state_file)
     except FileNotFoundError:
-        logger.warn("Persisted state not found, creating a new state")
+        logger.warning("Persisted state not found, creating a new state")
         state = json.dumps({})
     return state
 
