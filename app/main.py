@@ -223,9 +223,9 @@ if __name__ == '__main__':
     parser.add_argument('--s3_secret_access_key', help="Service account secret access key for AWS S3")
     parser.add_argument('--s3_bucket', help="S3 bucket to store EdgeOS state")
     parser.add_argument('--dest_ip', help="Destination IP used for DNAT rules")
-    parser.add_argument('--edge_inbound_interface', nargs='+', help="Which inbound interfaces on EdgeOS to create DNAT rules for")
-    parser.add_argument('--edge_fw_names', nargs='+', help="Which EdgeOS firewall names to create firewall rules for")
-    parser.add_argument('--excluded_services', nargs='+', help="List of services to exclude from auto provisioning")
+    parser.add_argument('--edge_inbound_interface', nargs='+', help="Which inbound interfaces on EdgeOS to create DNAT rules for. Accepts multiple interfaces (e.g. --edge_inbound_interface eth0 eth1)")
+    parser.add_argument('--edge_fw_names', nargs='+', help="Which EdgeOS firewall names to create firewall rules for. Accepts multiple firewall names (e.g. --edge_fw_names LAN_IN WAN_IN)")
+    parser.add_argument('--excluded_services', nargs='+', help="List of services to exclude from auto provisioning. List as namespace_name/service_name. Accepts multiple services (e.g. --excluded_services default/nginx namespace2/service2)")
     parser.add_argument('--dry_run', help="Read only run of app. No changes will be made", action="store_true")
 
     args = parser.parse_args()

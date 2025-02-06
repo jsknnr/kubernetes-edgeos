@@ -7,9 +7,8 @@ I have no idea if this will ever be useful for anyone other than me, but here it
 To use the app, make sure the Python dependencies are installed and simply call `main.py` with the following arguments (there are a lot)
 
 ```
-usage: main.py [-h] [--edge_user EDGE_USER] [--edge_password EDGE_PASSWORD] [--edge_address EDGE_ADDRESS] [--k8s_sa_token K8S_SA_TOKEN] [--k8s_api_address K8S_API_ADDRESS] [--k8s_api_port K8S_API_PORT] [--s3_access_key S3_ACCESS_KEY]
-               [--s3_secret_access_key S3_SECRET_ACCESS_KEY] [--s3_bucket S3_BUCKET] [--dest_ip DEST_IP] [--edge_inbound_interface EDGE_INBOUND_INTERFACE [EDGE_INBOUND_INTERFACE ...]]
-               [--edge_fw_names EDGE_FW_NAMES [EDGE_FW_NAMES ...]] [--excluded_services EXCLUDED_SERVICES [EXCLUDED_SERVICES ...]] [--dry_run]
+usage: main.py [-h] [--edge_user EDGE_USER] [--edge_password EDGE_PASSWORD] [--edge_address EDGE_ADDRESS] [--k8s_sa_token K8S_SA_TOKEN] [--k8s_api_address K8S_API_ADDRESS] [--k8s_api_port K8S_API_PORT] [--s3_access_key S3_ACCESS_KEY] [--s3_secret_access_key S3_SECRET_ACCESS_KEY]
+               [--s3_bucket S3_BUCKET] [--dest_ip DEST_IP] [--edge_inbound_interface EDGE_INBOUND_INTERFACE [EDGE_INBOUND_INTERFACE ...]] [--edge_fw_names EDGE_FW_NAMES [EDGE_FW_NAMES ...]] [--excluded_services EXCLUDED_SERVICES [EXCLUDED_SERVICES ...]] [--dry_run]
 
 options:
   -h, --help            show this help message and exit
@@ -33,11 +32,11 @@ options:
                         S3 bucket to store EdgeOS state
   --dest_ip DEST_IP     Destination IP used for DNAT rules
   --edge_inbound_interface EDGE_INBOUND_INTERFACE [EDGE_INBOUND_INTERFACE ...]
-                        Which inbound interfaces on EdgeOS to create DNAT rules for
+                        Which inbound interfaces on EdgeOS to create DNAT rules for. Accepts multiple interfaces (e.g. --edge_inbound_interface eth0 eth1)
   --edge_fw_names EDGE_FW_NAMES [EDGE_FW_NAMES ...]
-                        Which EdgeOS firewall names to create firewall rules for
+                        Which EdgeOS firewall names to create firewall rules for. Accepts multiple firewall names (e.g. --edge_fw_names LAN_IN WAN_IN)
   --excluded_services EXCLUDED_SERVICES [EXCLUDED_SERVICES ...]
-                        List of services to exclude from auto provisioning
+                        List of services to exclude from auto provisioning. List as namespace_name/service_name. Accepts multiple services (e.g. --excluded_services default/nginx namespace2/service2)
   --dry_run             Read only run of app. No changes will be made
 ```
 
