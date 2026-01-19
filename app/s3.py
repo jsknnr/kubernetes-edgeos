@@ -1,13 +1,9 @@
-import logging
 import json
+import logging
 from boto3 import Session
 from botocore.exceptions import ClientError
 
-# Setup Logging
-logger = logging.getLogger("s3")
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-logger.addHandler(handler)
+logger = logging.getLogger(__name__)
 
 
 class S3:

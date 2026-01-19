@@ -4,11 +4,16 @@ Scrape Kubernetes services and automatically create DNAT and Firewall rules in U
 I have no idea if this will ever be useful for anyone other than me, but here it is. I run a Kubernetes cluster in my home lab. My core router is a Ubiquity EdgeRouter. I got tired of manually creating firewall rules and destination nat rules on my router every time I spun up a service that I wanted to expose externally. So I wrote this little Python app that can scrape the current list of services in a Kubernetes cluster, check that they are type LoadBalancer (the type I am interested in), and build DNAT and firewall rules on an EdgeRouter based on the data from the Kubernetes service. Once it does the apply, it saves it's running state that it uses to create the rules as a json file to persist to S3. I persist it's last state so I can compare the current running state and see if any services need to be removed from the router if they are no longer present on the cluster.
 
 ## Usage
-To use the app, make sure the Python dependencies are installed and simply call `main.py` with the following arguments (there are a lot)
+To use the app, make sure the Python dependencies are installed and run `kubernetes-edgeos` with the following arguments (there are a lot).
 
 ```
-usage: main.py [-h] [--edge_user EDGE_USER] [--edge_password EDGE_PASSWORD] [--edge_address EDGE_ADDRESS] [--k8s_sa_token K8S_SA_TOKEN] [--k8s_api_address K8S_API_ADDRESS] [--k8s_api_port K8S_API_PORT] [--s3_access_key S3_ACCESS_KEY] [--s3_secret_access_key S3_SECRET_ACCESS_KEY]
-               [--s3_bucket S3_BUCKET] [--dest_ip DEST_IP] [--edge_inbound_interface EDGE_INBOUND_INTERFACE [EDGE_INBOUND_INTERFACE ...]] [--edge_fw_names EDGE_FW_NAMES [EDGE_FW_NAMES ...]] [--excluded_services EXCLUDED_SERVICES [EXCLUDED_SERVICES ...]] [--dry_run]
+usage: kubernetes-edgeos [-h] --edge_user EDGE_USER --edge_password EDGE_PASSWORD --edge_address EDGE_ADDRESS
+                         [--edge_verify_ssl] [--edge_timeout EDGE_TIMEOUT] --k8s_sa_token K8S_SA_TOKEN --k8s_api_address K8S_API_ADDRESS
+                         --k8s_api_port K8S_API_PORT [--k8s_verify_ssl] --s3_access_key S3_ACCESS_KEY
+                         --s3_secret_access_key S3_SECRET_ACCESS_KEY --s3_bucket S3_BUCKET --dest_ip DEST_IP
+                         --edge_inbound_interface EDGE_INBOUND_INTERFACE [EDGE_INBOUND_INTERFACE ...]
+                         --edge_fw_names EDGE_FW_NAMES [EDGE_FW_NAMES ...]
+                         [--excluded_services EXCLUDED_SERVICES [EXCLUDED_SERVICES ...]] [--dry_run] [--log_level LOG_LEVEL]
 
 options:
   -h, --help            show this help message and exit
@@ -18,12 +23,16 @@ options:
                         EdgeOS user password for auth
   --edge_address EDGE_ADDRESS
                         IP Address to reach EdgeOS API
+  --edge_verify_ssl     Verify EdgeOS SSL certificate
+  --edge_timeout EDGE_TIMEOUT
+                        EdgeOS API timeout in seconds
   --k8s_sa_token K8S_SA_TOKEN
                         Service Account auth token for Kubernetes API
   --k8s_api_address K8S_API_ADDRESS
                         Kubernetes API address
   --k8s_api_port K8S_API_PORT
                         Kubernetes API port
+  --k8s_verify_ssl       Verify Kubernetes SSL certificate
   --s3_access_key S3_ACCESS_KEY
                         Service account access key for AWS S3
   --s3_secret_access_key S3_SECRET_ACCESS_KEY
@@ -38,6 +47,8 @@ options:
   --excluded_services EXCLUDED_SERVICES [EXCLUDED_SERVICES ...]
                         List of services to exclude from auto provisioning. List as namespace_name/service_name. Accepts multiple services (e.g. --excluded_services default/nginx namespace2/service2)
   --dry_run             Read only run of app. No changes will be made
+  --log_level LOG_LEVEL
+                        Log level (e.g. INFO, DEBUG)
 ```
 
 Most of the arugments are self explanatory. My home network is segmented into multiple networks and I use zone based firewall policies. Due to this, the arguments `edge_inbound_interface` and `edge_fw_names` can take multiple values if you want to have DNAT rules created for multiple inbound interfaces or firewall rules created for more than 1 firewall in EdgeOS. The `dry_run` argument will run the app but not actually make any changes, it will just list the ones it would have made.

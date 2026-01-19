@@ -2,20 +2,16 @@ import logging
 
 from kubernetes import client
 
-# Setup Logging
-logger = logging.getLogger("k8s")
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-logger.addHandler(handler)
+logger = logging.getLogger(__name__)
 
 
 class K8s:
-    def __init__(self, token, endpoint_ip, endpoint_port):
+    def __init__(self, token, endpoint_ip, endpoint_port, verify_ssl=False):
         self.configuration = client.Configuration()
         self.configuration.host = f"https://{endpoint_ip}:{endpoint_port}"
         self.configuration.api_key["authorization"] = token
         self.configuration.api_key_prefix["authorization"] = "Bearer"
-        self.configuration.verify_ssl = False
+        self.configuration.verify_ssl = verify_ssl
         self.api_client = client.ApiClient(self.configuration)
         self.api = client.CoreV1Api(self.api_client)
 

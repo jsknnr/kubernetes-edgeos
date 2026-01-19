@@ -1,6 +1,6 @@
 import requests
-import json
 import logging
+import json
 
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
@@ -8,27 +8,32 @@ from urllib3 import disable_warnings
 # EdgeOS has a self-signed certificate and I am not installing a signed certificate on it
 disable_warnings(InsecureRequestWarning)
 
-# Setup Logging
-logger = logging.getLogger("edgeos")
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-logger.addHandler(handler)
+logger = logging.getLogger(__name__)
 
 
 class EdgeOS:
-    def __init__(self, address, user, password):
+    def __init__(self, address, user, password, verify_ssl=False, timeout=10):
         self.address = address
+        self.verify_ssl = verify_ssl
+        self.timeout = timeout
         self.session = requests.Session()
-        self.session.post(
+        response = self.session.post(
             f"https://{self.address}",
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             data=f"username={user}&password={password}",
-            verify=False,
+            verify=self.verify_ssl,
+            timeout=self.timeout,
         )
+        response.raise_for_status()
 
     def get_config(self):
         logger.info("Retrieving EdgeOS configuration")
-        config = self.session.get(f"https://{self.address}/api/edge/get.json")
+        config = self.session.get(
+            f"https://{self.address}/api/edge/get.json",
+            verify=self.verify_ssl,
+            timeout=self.timeout,
+        )
+        config.raise_for_status()
         return json.loads(config.text)
 
     def create_fw_rule(
@@ -76,7 +81,10 @@ class EdgeOS:
             f"https://{self.address}/api/edge/batch.json",
             headers=headers,
             data=json.dumps(payload),
+            verify=self.verify_ssl,
+            timeout=self.timeout,
         )
+        response.raise_for_status()
         return response.status_code
 
     def delete_fw_rule(self, fw_name, rule_id):
@@ -100,7 +108,10 @@ class EdgeOS:
             f"https://{self.address}/api/edge/batch.json",
             headers=headers,
             data=json.dumps(payload),
+            verify=self.verify_ssl,
+            timeout=self.timeout,
         )
+        response.raise_for_status()
         return response.status_code
 
     def create_dnat_rule(
@@ -151,7 +162,10 @@ class EdgeOS:
             f"https://{self.address}/api/edge/batch.json",
             headers=headers,
             data=json.dumps(payload),
+            verify=self.verify_ssl,
+            timeout=self.timeout,
         )
+        response.raise_for_status()
         return response.status_code
 
     def delete_dnat_rule(self, rule_id):
@@ -168,5 +182,8 @@ class EdgeOS:
             f"https://{self.address}/api/edge/batch.json",
             headers=headers,
             data=json.dumps(payload),
+            verify=self.verify_ssl,
+            timeout=self.timeout,
         )
+        response.raise_for_status()
         return response.status_code
