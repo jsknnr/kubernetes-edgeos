@@ -3,10 +3,11 @@ import logging
 from kubernetes import client
 
 # Setup Logging
-logger = logging.getLogger('k8s')
+logger = logging.getLogger("k8s")
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
 logger.addHandler(handler)
+
 
 class K8s:
     def __init__(self, token, endpoint_ip, endpoint_port):
